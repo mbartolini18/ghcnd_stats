@@ -38,11 +38,11 @@ tmin=np.ma.masked_less(df.TMIN.values*1.8+32,-100.)
 #print (tmax.max(),tmax.min()) #Max and min temps in record
 #print (tmin.max(),tmin.min())
 
-#Create figure for 2d histogram plot with 1d histogram side panels
+#Create figure for 2D histogram plot with 1D histogram side panels
 fig=plt.figure(figsize=(9,8))
 gs=mpl.gridspec.GridSpec(3,3) #Grid formatting with unequal subplot sizes
 
-#Primary 2d histogram plot
+#Primary 2D histogram plot
 ax=plt.subplot(gs[1:,:-1])
 bins=np.arange(int(tmin.min())+0.5,int(tmax.max())+1+0.5,1) #Histogram bins every deg F, centered on midpoint
 cmap=cmocean.cm.thermal
