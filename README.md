@@ -4,6 +4,7 @@ A collection of plotting scripts I use to visualize how current observations com
 | Script Name | Description |
 |--------------|--------------|
 | snow_acc_ytd.py | Plots water year-to-date snowfall for a given station. |
+| precip_acc_ytd.py | Plots water year-to-date precipitation for a given station. |
 | max_min_temp_histo.py | Plots 2-D histogram of maximum and minimum daily temperatures for a given station. |
 
 **Credits:** Jared Rennie's [GHCNpy](https://github.com/jjrennie/GHCNpy) module for plotting inspiration and nicely-formatted .csv files, and Joe Zagrodnik for temperature histogram plotting idea.

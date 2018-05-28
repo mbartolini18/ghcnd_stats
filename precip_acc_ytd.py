@@ -22,7 +22,7 @@ df=df.set_index('YYYY_MM_DD') #Set datetime as index
 #Get starting and ending years in station record
 syr=str(pd.to_datetime(df.index).year.values[0])
 eyr=str(pd.to_datetime(df.index).year.values[-1])
-title=stname+'\nAnnual Snowfall Time Series | Period of Record: '+syr+'-'+eyr #Plot title
+title=stname+'\nAnnual Precipitation Time Series | Period of Record: '+syr+'-'+eyr #Plot title
 
 #Unit conversions: Temps from C to F and precip from mm to in 
 df['TMAX']=df['TMAX']*1.8+32.
@@ -56,61 +56,61 @@ water_yr_masks.append((df.index >= end_date)) #Oct 1 to present (could be partia
 #Create figure
 fig,ax=plt.subplots(figsize=(12,8))
 
-#Loop through and count annual snowfall amounts
-snow_acc_years=pd.DataFrame({}) #New dataframe for annual total snowfall
-snow_acc_timeseries=pd.DataFrame({}) #Each individual year's running summed snowfall, aligned to oct 1 (stripped of year info), used to compute mean/percentile stats
+#Loop through and count annual precip amounts
+precip_acc_years=pd.DataFrame({}) #New dataframe for annual total precip 
+precip_acc_timeseries=pd.DataFrame({}) #Each individual year's running summed precip, aligned to oct 1 (stripped of year info), used to compute mean/percentile stats
 dfwatyr_all=[]
 for i,mask in enumerate(water_yr_masks[1:]): #Skip first (partial) year
             dfwatyr=df.loc[mask] #Find water year
-            dfwatyr=dfwatyr.fillna(value=0.0) #Fill missing data as zeros (won't hurt acc snow except for long periods of missing data)
-            dfwatyr['SNOW_ACC']=dfwatyr.SNOW.cumsum() #Summation
+            dfwatyr=dfwatyr.fillna(value=0.0) #Fill missing data as zeros (won't hurt acc precip except for long periods of missing data)
+            dfwatyr['PRCP_ACC']=dfwatyr.PRCP.cumsum() #Summation
             dfwatyr_all.append(dfwatyr)
 
-            #Add cumulative snow total to summary dataframe
-            snow_acc_years=snow_acc_years.append({'END_YR':int(dfwatyr.index.year[-1]),'SNOW_ACC':dfwatyr.SNOW_ACC.values[-1]},ignore_index=True)
+            #Add cumulative precip total to summary dataframe
+            precip_acc_years=precip_acc_years.append({'END_YR':int(dfwatyr.index.year[-1]),'PRCP_ACC':dfwatyr.PRCP_ACC.values[-1]},ignore_index=True)
 
-            #Append cumulative snowfall series (full daily info) to dataframe if full year's worth of data exists
-            snow_acc_yr=pd.Series(dfwatyr.SNOW_ACC.values,name='SNOW_ACC_'+str(dfwatyr.index.year[0])+'_'+str(dfwatyr.index.year[-1]))
-            if (df.loc[mask].SNOW.count()>364) & (df.loc[mask].SNOW.count()<367):
-                snow_acc_timeseries=snow_acc_timeseries.append(snow_acc_yr)
+            #Append cumulative precip series (full daily info) to dataframe if full year's worth of data exists
+            precip_acc_yr=pd.Series(dfwatyr.PRCP_ACC.values,name='PRCP_ACC_'+str(dfwatyr.index.year[0])+'_'+str(dfwatyr.index.year[-1]))
+            if (df.loc[mask].PRCP.count()>364) & (df.loc[mask].PRCP.count()<367):
+                precip_acc_timeseries=precip_acc_timeseries.append(precip_acc_yr)
 		
-#Find top 5 snowiest and least snowy years to highlight these particular seasons in plot
-snow_acc_years_sorted=snow_acc_years.sort_values('SNOW_ACC',ascending=False) #Sort from most to least snowy
-print ('Snowiest years: ')
-print (snow_acc_years_sorted.head())
-if (df.index.month[-1] > 9) or (df.index.month[-1] < 5): #Don't include current year (incomplete) in top/bottom 5 stats
-    snow_acc_years_sorted_dropcurryr=snow_acc_years_sorted[snow_acc_years_sorted.END_YR != float(eyr)]
+#Find top 5 rainiest and least rainy years to highlight these particular seasons in plot
+precip_acc_years_sorted=precip_acc_years.sort_values('PRCP_ACC',ascending=False) #Sort from most to least rainy
+print ('Rainiest years: ')
+print (precip_acc_years_sorted.head())
+if (df.index.month[-1] > 9) or (df.index.month[-1] < 10): #Don't include current year (incomplete) in top/bottom 5 stats
+    precip_acc_years_sorted_dropcurryr=precip_acc_years_sorted[precip_acc_years_sorted.END_YR != float(eyr)]
 else:
-    snow_acc_years_sorted_dropcurryr=snow_acc_years_sorted
-top5=list(snow_acc_years_sorted_dropcurryr.index[:5])
-bot5=list(snow_acc_years_sorted_dropcurryr.index[-5:])
-sorted_idx=list(snow_acc_years_sorted.index)
-for i in sorted_idx: #Sorted, plotting sequentially from most to least snowy (nice order for legend)
+    precip_acc_years_sorted_dropcurryr=precip_acc_years_sorted
+top5=list(precip_acc_years_sorted_dropcurryr.index[:5])
+bot5=list(precip_acc_years_sorted_dropcurryr.index[-5:])
+sorted_idx=list(precip_acc_years_sorted.index)
+for i in sorted_idx: #Sorted, plotting sequentially from most to least rainy (nice order for legend)
 	dfwatyr=dfwatyr_all[i]
-	dates=[datetime(2017,10,1)+timedelta(days=i) for i in range(len(dfwatyr.SNOW_ACC.values))]
+	dates=[datetime(2017,10,1)+timedelta(days=i) for i in range(len(dfwatyr.PRCP_ACC.values))]
 	pathfx=[PathEffects.withStroke(linewidth=3,foreground='w')]	
-	top5colors=plt.cm.YlGnBu(np.linspace(0.6,1.0,5))[::-1]
-	bot5colors=plt.cm.YlGnBu(np.linspace(0.1,0.5,5))[::-1]
+	top5colors=plt.cm.Spectral(np.linspace(0.7,1.0,5))[::-1]
+	bot5colors=plt.cm.Spectral(np.linspace(0,0.3,5))[::-1]
 	if i in top5: #Plot top5 with a different color and linewidth to highlight
 		ix=top5.index(i)
 		ci=top5colors[ix] #Pick color
-		ax.plot(dates,dfwatyr.SNOW_ACC.values,color=ci,lw=2,zorder=3,label=str(dfwatyr.index.year[0])+'-'+str(dfwatyr.index.year[-1])+' ('+str(dfwatyr.SNOW_ACC.values[-1])+' in.)')
+		ax.plot(dates,dfwatyr.PRCP_ACC.values,color=ci,lw=2,zorder=3,label=str(dfwatyr.index.year[0])+'-'+str(dfwatyr.index.year[-1])+' ('+str(dfwatyr.PRCP_ACC.values[-1])+' in.)')
 	elif i in bot5:	#Similar to top5, plot with different color/linewidth
 		ix=bot5.index(i)
 		ci=bot5colors[ix] #Pick color
-		ax.plot(dates,dfwatyr.SNOW_ACC.values,color=ci,lw=2,zorder=3,label=str(dfwatyr.index.year[0])+'-'+str(dfwatyr.index.year[-1])+' ('+str(dfwatyr.SNOW_ACC.values[-1])+' in.)')
-	elif i==len(dfwatyr_all)-1: #Plot current ytd snowfall in black
-		ax.plot(dates,dfwatyr.SNOW_ACC.values,color='k',lw=3,zorder=4)
-		ax.plot(dates[len(dfwatyr.SNOW_ACC.values)-1],dfwatyr.SNOW_ACC.values[-1],'*',color='b',markersize=15,mec='k',mew=1,zorder=5,label=str(dfwatyr.index.year[0])+'-'+str(dfwatyr.index.year[-1])+' ('+str(dfwatyr.SNOW_ACC.values[-1])+' in.)')
+		ax.plot(dates,dfwatyr.PRCP_ACC.values,color=ci,lw=2,zorder=3,label=str(dfwatyr.index.year[0])+'-'+str(dfwatyr.index.year[-1])+' ('+str(dfwatyr.PRCP_ACC.values[-1])+' in.)')
+	elif i==len(dfwatyr_all)-1: #Plot current ytd rainfall in black
+		ax.plot(dates,dfwatyr.PRCP_ACC.values,color='k',lw=3,zorder=4)
+		ax.plot(dates[len(dfwatyr.PRCP_ACC.values)-1],dfwatyr.PRCP_ACC.values[-1],'*',color='g',markersize=15,mec='k',mew=1,zorder=5,label=str(dfwatyr.index.year[0])+'-'+str(dfwatyr.index.year[-1])+' ('+str(dfwatyr.PRCP_ACC.values[-1])+' in.)')
 	else: #Plot all other years in light blue with thin line
-		ax.plot(dates,dfwatyr.SNOW_ACC.values,color='lightskyblue',lw=0.75,zorder=2.5)
+		ax.plot(dates,dfwatyr.PRCP_ACC.values,color='yellowgreen',lw=0.75,zorder=2.5)
 
-#plot smoothed accumulated snow quantiles (10-90 light gray shading, 25-75 darker gray shading, and single line for 50)
-q90=snow_acc_timeseries.quantile(q=0.9).values[:-1]
-q75=snow_acc_timeseries.quantile(q=0.75).values[:-1]
-q50=snow_acc_timeseries.quantile(q=0.5).values[:-1]
-q25=snow_acc_timeseries.quantile(q=0.25).values[:-1]
-q10=snow_acc_timeseries.quantile(q=0.1).values[:-1]
+#plot smoothed accumulated rain quantiles (10-90 light gray shading, 25-75 darker gray shading, and single line for 50)
+q90=precip_acc_timeseries.quantile(q=0.9).values[:-1]
+q75=precip_acc_timeseries.quantile(q=0.75).values[:-1]
+q50=precip_acc_timeseries.quantile(q=0.5).values[:-1]
+q25=precip_acc_timeseries.quantile(q=0.25).values[:-1]
+q10=precip_acc_timeseries.quantile(q=0.1).values[:-1]
 dates=[datetime(2017,10,1)+timedelta(days=i) for i in range(len(q90))]
 ax.fill_between(dates,gaussian_filter(q90,sigma=5),gaussian_filter(q10,sigma=5),color='0.7',alpha=0.3,label='10th-90th Percentile\n('+str(np.around(q10[-1],decimals=1))+'-'+str(np.around(q90[-1],decimals=1))+' in.)')
 ax.fill_between(dates,gaussian_filter(q75,sigma=5),gaussian_filter(q25,sigma=5),color='0.5',alpha=0.3,label='25th-75th Percentile\n('+str(np.around(q25[-1],decimals=1))+'-'+str(np.around(q75[-1],decimals=1))+' in.)')
@@ -133,12 +133,12 @@ monsfmt=mpl.dates.DateFormatter('1 %b')
 ax.xaxis.set_major_locator(mons) #Label axis at every month
 ax.xaxis.set_major_formatter(monsfmt)
 plt.grid(linestyle='--')
-#Set plot x-limits to snow season (Oct - May)
-ax.set_xlim(datetime(2017,9,27),datetime(2018,6,3))
-plt.ylim([-5,snow_acc_years.SNOW_ACC.values.max()+5])
+#Set plot x-limits to water year (Oct - Sep)
+ax.set_xlim(datetime(2017,9,27),datetime(2018,10,3))
+plt.ylim([-3,precip_acc_years.PRCP_ACC.values.max()+3])
 plt.xlabel('Date')
-plt.ylabel('Accumulated Snowfall (in.)')
+plt.ylabel('Accumulated Precipitation (in.)')
 plt.suptitle(title,fontsize=12,fontweight='bold')
 plt.subplots_adjust(top=0.93)
-plt.savefig(stid.lower()+'_snow_acc_ytd.png',bbox_inches='tight')
+plt.savefig(stid.lower()+'_precip_acc_ytd.png',bbox_inches='tight')
 plt.close()
