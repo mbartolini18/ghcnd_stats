@@ -1,4 +1,4 @@
-#Make a running accumulated water year-to-date snowfall plot
+#Make a running accumulated water year-to-date precipitation plot
 #Plot inspiration and nicely formatted .csv GHCN-D output from Jared Rennie's GHCNpy repository
 #Created by Massey Bartolini, 3/25/2018
 
